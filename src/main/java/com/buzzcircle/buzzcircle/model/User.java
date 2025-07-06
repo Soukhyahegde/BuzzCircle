@@ -1,9 +1,8 @@
 package com.buzzcircle.buzzcircle.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-
-
 import java.util.List;
 
 
@@ -23,6 +22,10 @@ public class User {
 
     @ElementCollection
     private List<String> interests;
+
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    private List<Post> posts;
 
     // Relationships
     @ManyToMany
