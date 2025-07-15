@@ -3,6 +3,7 @@ import com.buzzcircle.buzzcircle.model.Post;
 import com.buzzcircle.buzzcircle.model.User;
 import com.buzzcircle.buzzcircle.repository.PostRepository;
 import com.buzzcircle.buzzcircle.repository.UserRepository;
+import com.buzzcircle.buzzcircle.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,8 @@ public class PostController  {
     private final PostRepository postRepository = null;
     @Autowired
     private final UserRepository userRepository = null;
+    @Autowired
+    private PostService postService;
 
     @GetMapping("/{userId}")
     public List<Post> getPostsByUser (@PathVariable Long userId){
@@ -49,5 +52,16 @@ public class PostController  {
 
         postRepository.delete(post);
         return ResponseEntity.ok().body("Post deleted successfully");
+    }
+    @PostMapping("/{postId}/upvote")
+    public ResponseEntity<String> upvotePost(@PathVariable Long postId, @RequestParam Long userId) {
+        Post post = postRepository.findById(postId).orElseThrow(() -> new RuntimeException("Cannot find post: " + postId));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Cannot find user: " + userId));
+        boolean success = postService.upvotePost(post, user);
+        if (success) {
+            return ResponseEntity.ok("Upvoted successfully");
+        } else {
+            return ResponseEntity.badRequest().body("User has already upvoted this post");
+        }
     }
 }
