@@ -1,6 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
+
+const initialPosts = [
+  { id: 1, content: "Just captured an amazing sunset at the beach. 🌅", upvotes: 12 },
+  { id: 2, content: "Does anyone have recommendations for a solo trip to Japan?", upvotes: 5 },
+];
 
 const Home = () => {
+  const [posts, setPosts] = useState(initialPosts);
+  const [newContent, setNewContent] = useState("");
+
+  const handleUpvote = (postId) => {
+    setPosts(posts.map(post =>
+      post.id === postId ? { ...post, upvotes: post.upvotes + 1 } : post
+    ));
+  };
+
+  const handleNewPost = (e) => {
+    e.preventDefault();
+    if (!newContent.trim()) return;
+    setPosts([
+      { id: Date.now(), content: newContent, upvotes: 0 },
+      ...posts,
+    ]);
+    setNewContent("");
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Interest-based Social Networking</h2>
@@ -23,31 +47,34 @@ const Home = () => {
         {/* Posts Section */}
         <div>
           <h3 className="text-xl font-semibold mb-2">Posts</h3>
-          <div className="bg-white p-4 rounded-lg shadow-sm mb-3">
-            <p>Just captured an <strong>amazing</strong> sunset at the beach. 🌅</p>
-            <p className="text-sm text-gray-500 mt-1">Upvotes: 12</p>
-          </div>
-          <div className="bg-white p-4 rounded-lg shadow-sm">
-            <p>Does anyone have recommendations for a solo trip to Japan?</p>
-            <p className="text-sm text-gray-500 mt-1">Upvotes: 5</p>
-          </div>
+          {posts.map(post => (
+            <div key={post.id} className="bg-white p-4 rounded-lg shadow-sm mb-3">
+              <p>{post.content}</p>
+              <div className="text-sm text-gray-500 mt-1 flex items-center">
+                Upvotes: {post.upvotes}
+                <button
+                  className="ml-4 px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700"
+                  onClick={() => handleUpvote(post.id)}
+                >
+                  👍 Upvote
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* New Post Section */}
         <div>
           <h3 className="text-xl font-semibold mb-2">New Post</h3>
-          <form className="flex flex-col gap-3 bg-white p-4 rounded-lg shadow-sm">
-            <input
-              type="text"
-              placeholder="What's on your mind?"
-              className="border p-2 rounded"
-            />
+          <form className="flex flex-col gap-3 bg-white p-4 rounded-lg shadow-sm" onSubmit={handleNewPost}>
             <textarea
               rows="3"
               placeholder="Write your post..."
               className="border p-2 rounded"
+              value={newContent}
+              onChange={e => setNewContent(e.target.value)}
             ></textarea>
-            <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
               Post
             </button>
           </form>

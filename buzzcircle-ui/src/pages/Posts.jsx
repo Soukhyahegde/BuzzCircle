@@ -14,7 +14,7 @@ export default function Posts() {
     <div>
       <h1 className="text-xl font-bold">Posts</h1>
       <NewPostForm userId={user.userId} />
-      <PostList />
+      <PostList userId={user.userId} />
     </div>
   );
 }
