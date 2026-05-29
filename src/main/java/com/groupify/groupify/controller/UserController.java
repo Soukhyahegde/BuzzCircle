@@ -3,25 +3,34 @@ package com.groupify.groupify.controller;
 import com.groupify.groupify.model.Circle;
 import com.groupify.groupify.model.User;
 import com.groupify.groupify.model.Post;
+import com.groupify.groupify.dto.AuthRequest;
 import com.groupify.groupify.dto.UserDTO;
 import com.groupify.groupify.repository.CircleRepository;
 import com.groupify.groupify.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import io.swagger.v3.oas.annotations.media.*;
+// import io.swagger.v3.oas.annotations.media.MediaType;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.http.MediaType;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 
 import java.util.List;
+import java.util.Set;
 @RestController
 @RequestMapping("api/user")
 @RequiredArgsConstructor
 public class UserController {
-    @Autowired
-    private final CircleRepository circleRepo = null;
-    @Autowired
-    private final UserRepository userRepo = null;
+    private final CircleRepository circleRepo;
+    private final UserRepository userRepo;
+    private final PasswordEncoder passwordEncoder;
 
 
     @GetMapping
@@ -47,17 +56,18 @@ public class UserController {
     @PutMapping("/{userId}")
     public ResponseEntity<User> updateUser(
             @PathVariable Long userId,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) String password,
-            @RequestParam(required = false) String bio,
-            @RequestParam(required = false) MultipartFile profilePicture
+            @RequestPart(required = false) String name,
+            @RequestPart(required = false) String email,
+            @RequestPart(required = false) String password,
+            @RequestPart(required = false) String bio,
+            @RequestPart(required = false) MultipartFile profilePicture
     ) {
-       return (ResponseEntity<User>) userRepo.findById(userId)
+        
+        return (ResponseEntity<User>) userRepo.findById(userId)
         .map(user -> {
             if (name != null) user.setUsername(name);
             if (email != null) user.setEmail(email);
-            if (password != null) user.setPassword(password); // hash before saving in production!
+            if (password != null) user.setPassword(passwordEncoder.encode(password));
             if (bio != null) user.setBio(bio);
             if (profilePicture != null && !profilePicture.isEmpty()) {
                 try {
@@ -72,7 +82,40 @@ public class UserController {
         .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @PostMapping(value ="/{userId}/upload-picture",
+        consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    @Operation(summary = "Upload an image")
+    public ResponseEntity<User> uploadProfilePicture(
+            @PathVariable Long userId,
+            @RequestPart("file")
+            @Parameter(
+                description = "Image file to upload",
+                required = true,
+                content = @Content(
+                    mediaType = MediaType.APPLICATION_OCTET_STREAM_VALUE,
+                    schema = @Schema(type = "string", format = "binary")
+                )
+            )
+            MultipartFile profilePicture
+    ) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        if (profilePicture != null && !profilePicture.isEmpty()) {
+            try {
+                user.setProfilePicture(profilePicture.getBytes());
+                userRepo.save(user);
+                return ResponseEntity.ok(user);
+            } catch (Exception e) {
+                return ResponseEntity.badRequest().build();
+            }
+        }
+        return ResponseEntity.badRequest().build();
+    }
+
     @DeleteMapping("/{userId}")
+    @PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.id")
     public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
         User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         userRepo.delete(user);
@@ -93,21 +136,24 @@ public class UserController {
 
     @PostMapping("/{userId}/follow")
     public ResponseEntity<?> followUser(@PathVariable Long userId, @RequestParam Long followerId) {
-        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        //String username = SecurityContextHolder.getContext().getAuthentication().getName();
         if (userId.equals(followerId)) {
             return ResponseEntity.badRequest().body("You cannot follow yourself.");
         }
         User userToFollow = userRepo.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User to follow not found"));
 
-        User follower = userRepo.findByUsername(username)
+        User follower = userRepo.findById(followerId)
                 .orElseThrow(() -> new RuntimeException("Follower not found"));
 
         if (follower.getFollowing().contains(userToFollow)) {
             return ResponseEntity.badRequest().body("Already following this user.");
         }
         follower.getFollowing().add(userToFollow);
+        userToFollow.getFollowers().add(follower);
+    
         userRepo.save(follower);
+        userRepo.save(userToFollow);
 
         return ResponseEntity.ok("Followed successfully");
     }
@@ -121,8 +167,10 @@ public class UserController {
                 .orElseThrow(() -> new RuntimeException("Follower not found"));
 
         follower.getFollowing().remove(userToUnfollow);
+        userToUnfollow.getFollowers().remove(follower);
+    
         userRepo.save(follower);
-
+        userRepo.save(userToUnfollow);
         return ResponseEntity.ok("Unfollowed successfully");
     }
 
@@ -150,6 +198,40 @@ public class UserController {
                 .toList();
 
         return ResponseEntity.ok(followingUsernames);
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody AuthRequest authRequest) {
+        // Validate input FIRST
+        if (authRequest.getUsername() == null || authRequest.getUsername().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Username is required");
+        }
+        
+        if (authRequest.getPassword() == null || authRequest.getPassword().isEmpty()) {
+            return ResponseEntity.badRequest().body("Password is required");
+        }
+
+        // Check if username already exists (after validation)
+        if (userRepo.findByUsername(authRequest.getUsername().trim()).isPresent()) {
+            return ResponseEntity.badRequest().body("Username already exists");
+        }
+
+        try {
+            User newUser = new User();
+            newUser.setUsername(authRequest.getUsername().trim());
+            newUser.setPassword(passwordEncoder.encode(authRequest.getPassword()));
+            if (authRequest.getEmail() != null && !authRequest.getEmail().isEmpty()) {
+                newUser.setEmail(authRequest.getEmail());
+            }
+            
+            // Assign USER role by default
+            newUser.setRoles(Set.of("ROLE_USER"));
+            
+            userRepo.save(newUser);
+            return ResponseEntity.ok("User registered successfully");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Registration failed: " + e.getMessage());
+        }
     }
 
 

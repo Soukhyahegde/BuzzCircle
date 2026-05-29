@@ -5,6 +5,7 @@ import com.groupify.groupify.model.Circle;
 import com.groupify.groupify.repository.CircleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,6 +42,19 @@ public class AdminController {
             return ResponseEntity.ok("Circle rejected and deleted.");
         }
         return ResponseEntity.notFound().build();
+    }
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/users/{userId}")
+    public ResponseEntity<?> deleteUser(@PathVariable Long userId) {
+        // Only admins can delete users
+        return ResponseEntity.ok("User deleted");
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/stats")
+    public ResponseEntity<?> getStats() {
+        // Only admins can view stats
+        return ResponseEntity.ok("Stats");
     }
 }
 

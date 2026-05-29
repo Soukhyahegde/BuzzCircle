@@ -7,7 +7,8 @@ import java.util.*;
 
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "users")
@@ -44,11 +45,15 @@ public class User {
     @ElementCollection
     private List<String> interests;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    private Set<String> roles = new HashSet<>();
+
     @OneToMany(mappedBy = "user")
     @JsonIgnore
     private List<Post> posts;
 
     @ManyToMany
+    @JsonIgnore
     private List<Circle> circles;
 
     // Users this user is following
@@ -58,10 +63,12 @@ public class User {
             joinColumns = @JoinColumn(name = "follower_id"),
             inverseJoinColumns = @JoinColumn(name = "following_id")
     )
+    @JsonIgnore
     private Set<User> following = new HashSet<>();
 
     // Users who follow this user
     @ManyToMany(mappedBy = "following")
+    @JsonIgnore
     private Set<User> followers = new HashSet<>();
 
     public List<String> getInterests() {
@@ -79,5 +86,6 @@ public class User {
     public void setCircles(List<Circle> circles) {
         this.circles = circles;
     }
+    
 }
 

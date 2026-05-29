@@ -7,6 +7,7 @@ import com.groupify.groupify.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,6 +39,18 @@ public class CircleController {
     public List<Circle> getApprovedCircles() {
         return circleRepo.findByApproved(true);
     }
+
+    @PutMapping("/{circleId}/approve")
+@PreAuthorize("hasRole('ADMIN')")
+public ResponseEntity<?> approveCircle(@PathVariable Long circleId) {
+    Circle circle = circleRepo.findById(circleId)
+            .orElseThrow(() -> new RuntimeException("Circle not found"));
+    
+    circle.setApproved(true);
+    circleRepo.save(circle);
+    
+    return ResponseEntity.ok("Circle approved successfully");
+}
 
     @PutMapping("/{circleId}")
     public Circle updateCircle(@PathVariable Long circleId, @RequestBody Circle updatedCircle) {

@@ -5,8 +5,11 @@ import lombok.*;
 
 import java.time.LocalDate;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class Challenge {
@@ -22,6 +25,7 @@ public class Challenge {
 
     @ManyToOne
     @JoinColumn(name = "circle_id")
+    @JsonIgnore
     private Circle circle;
 }
 

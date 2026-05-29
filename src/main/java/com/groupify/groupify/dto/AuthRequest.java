@@ -2,6 +2,16 @@ package com.groupify.groupify.dto;
 
 public class AuthRequest {
     private String username;
+    private String password;
+    private String email;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     public String getPassword() {
         return password;
@@ -11,14 +21,11 @@ public class AuthRequest {
         this.password = password;
     }
 
-    private String password;
-
-
-    public String getUsername() {
-        return username;
+    public String getEmail() {
+        return email;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

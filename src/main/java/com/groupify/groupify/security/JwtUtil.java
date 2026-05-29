@@ -2,15 +2,18 @@ package com.groupify.groupify.security;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.function.Function;
+import javax.crypto.SecretKey;
+
 
 @Component
 public class JwtUtil {
-    private final String SECRET_KEY = "your_secret_key_here";
+    private final String SECRET_KEY = "a_very_long_secret_key_at_least_32_characters_long";
     private final long EXPIRATION_TIME = 1000 * 60 * 60 * 10; // 10 hours
 
     public String extractUsername(String token) {
