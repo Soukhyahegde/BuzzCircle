@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/Login.css';
+import { Link } from "react-router-dom";
 
 const API_URL = 'http://localhost:8080/api';
 
@@ -98,7 +99,9 @@ const Login = ({ onLoginSuccess }) => {
         </form>
 
         <div className="login-footer">
-          <p>Don't have an account? <span className="signup-link">Sign up</span></p>
+          <p>Don't have an account? <Link to="/signup" className="signup-link">
+      Sign up
+    </Link></p>
         </div>
       </div>
     </div>
