@@ -1,0 +1,106 @@
+import React, { useState } from 'react';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:8080/api';
+
+const normalizeImages = (images) => {
+  if (Array.isArray(images)) {
+    return images;
+  }
+
+  if (typeof images === 'string' && images.trim()) {
+    try {
+      const parsedImages = JSON.parse(images);
+      return Array.isArray(parsedImages) ? parsedImages : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+};
+
+const PostCard = ({ post }) => {
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.upvotes || 0);
+  const images = normalizeImages(post.images);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    };
+  };
+
+  const handleLike = async () => {
+    try {
+      const userId = localStorage.getItem('userId');
+      await axios.post(
+        `${API_URL}/posts/${post.id}/upvote?userId=${userId}`,
+        {},
+        getAuthHeaders()
+      );
+      
+      if (!liked) {
+        setLikeCount(likeCount + 1);
+        setLiked(true);
+      } else {
+        setLikeCount(likeCount - 1);
+        setLiked(false);
+      }
+    } catch (err) {
+      if (err.response?.status === 400) {
+        alert('You have already upvoted this post');
+      } else {
+        console.error('Failed to upvote:', err);
+      }
+    }
+  };
+
+  return (
+    <div className="post-card">
+      <div className="post-header">
+        <div className="post-avatar">
+          {post.user?.name?.charAt(0) || 'U'}
+        </div>
+        <div className="post-meta">
+          <div className="post-author">{post.user?.username || 'Unknown'}</div>
+          <div className="post-time">@{post.user?.username || 'user'} • {new Date(post.createdAt).toLocaleString()}</div>
+        </div>
+        {/* <button className="follow-btn">+ Follow</button> */}
+      </div>
+
+      {post.title && <h3 className="post-title">{post.title}</h3>}
+      
+      <p className="post-content">{post.content}</p>
+
+      {images.length > 0 && (
+        <div className="post-images">
+          {images.map((image, index) => (
+            <div key={index} className="post-image" style={{ backgroundImage: `url(${image})` }} />
+          ))}
+        </div>
+      )}
+
+      <div className="post-engagement">
+        <div className="engagement-item" onClick={handleLike}>
+          {liked ? '❤️' : '🤍'} {likeCount}
+        </div>
+        <div className="engagement-item">
+          💬 {post.comments || 0}
+        </div>
+        <div className="engagement-item">
+          🔄
+        </div>
+        <div className="engagement-item">
+          ⬆️
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default PostCard;
