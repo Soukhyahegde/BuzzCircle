@@ -49,20 +49,23 @@ const PostCard = ({ post }) => {
           {post.user?.name?.charAt(0) || 'U'}
         </div>
         <div className="post-meta">
-          <div className="post-author">{post.user?.name || 'Unknown'}</div>
+          <div className="post-author">{post.user?.username || 'Unknown'}</div>
           <div className="post-time">@{post.user?.username || 'user'} • {new Date(post.createdAt).toLocaleString()}</div>
         </div>
-        <button className="follow-btn">+ Follow</button>
+        {/* <button className="follow-btn">+ Follow</button> */}
       </div>
 
-      <h3 className="post-title">{post.title || 'Untitled'}</h3>
+      {post.title && <h3 className="post-title">{post.title}</h3>}
       
       <p className="post-content">{post.content}</p>
 
-      <div className="post-images">
-        <div className="post-image" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }} />
-        <div className="post-image" style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }} />
-      </div>
+      {post.images && post.images.length > 0 && (
+        <div className="post-images">
+          {post.images.map((image, index) => (
+            <div key={index} className="post-image" style={{ backgroundImage: `url(${image})` }} />
+          ))}
+        </div>
+      )}
 
       <div className="post-engagement">
         <div className="engagement-item" onClick={handleLike}>

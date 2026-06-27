@@ -15,7 +15,6 @@ import java.util.Optional;
 @RequestMapping("/api/admin/circles")
 public class AdminController {
 
-    @Autowired
     private CircleRepository circleRepository;
 
     @GetMapping("/pending")

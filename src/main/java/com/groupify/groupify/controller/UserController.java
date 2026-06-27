@@ -4,26 +4,32 @@ import com.groupify.groupify.model.Circle;
 import com.groupify.groupify.model.User;
 import com.groupify.groupify.model.Post;
 import com.groupify.groupify.dto.AuthRequest;
+import com.groupify.groupify.dto.CircleSummaryDTO;
 import com.groupify.groupify.dto.UserDTO;
 import com.groupify.groupify.repository.CircleRepository;
 import com.groupify.groupify.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+// import io.swagger.v3.oas.annotations.media.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import io.swagger.v3.oas.annotations.media.*;
-// import io.swagger.v3.oas.annotations.media.MediaType;
-import org.springframework.web.bind.annotation.RequestBody;
+
 import org.springframework.http.MediaType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 
 import java.util.List;
 import java.util.Set;
+
+@Slf4j
 @RestController
 @RequestMapping("api/user")
 @RequiredArgsConstructor
@@ -123,9 +129,16 @@ public class UserController {
     }
 
     @GetMapping("/{userId}/circles")
-    public List<Circle> getUserCircles(@PathVariable Long userId) {
+    public List<CircleSummaryDTO> getUserCircles(@PathVariable Long userId) {
         User user = userRepo.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
-        return user.getCircles();
+        return user.getCircles().stream()
+                .map(circle -> new CircleSummaryDTO(
+                        circle.getId(),
+                        circle.getName(),
+                        circle.getDescription(),
+                        circle.getMembers().size()
+                ))
+                .toList();
     }
 
     @GetMapping("/{userId}/posts")
@@ -198,6 +211,26 @@ public class UserController {
                 .toList();
 
         return ResponseEntity.ok(followingUsernames);
+    }
+
+    @GetMapping("/{userId}/suggested")
+    public List<UserDTO> getSuggestedUsers(@PathVariable Long userId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        log.info("Auth :  ",authentication);
+        log.info("auth : ",authentication.getAuthorities());    
+        User currentUser = userRepo.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        List<User> allUsers = userRepo.findAll();
+        
+        // Filter out: self, already following, and those who follow them
+        return allUsers.stream()
+                .filter(user -> !user.getId().equals(userId))
+                .filter(user -> !currentUser.getFollowing().contains(user))
+                .limit(4)
+                .map(user -> new UserDTO(user.getId(), user.getUsername(), user.getFollowers().size(), user.getFollowing().size()))
+                .toList();
     }
 
     @PostMapping("/register")

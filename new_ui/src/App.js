@@ -68,9 +68,10 @@ function AppContent() {
             />
             <Route 
               path="/" 
-              element={ localStorage.getItem('token')
-    ? <Dashboard />
-    : <Navigate to="/login" />} 
+              element={user ? <Dashboard /> : <Navigate to="/login" />}
+    //           element={ localStorage.getItem('token')
+    // ? <Dashboard />
+    // : <Navigate to="/login" />} 
             />
             <Route path="*" element={<Navigate to={user ? "/" : "/login"} />} />
           </Routes>

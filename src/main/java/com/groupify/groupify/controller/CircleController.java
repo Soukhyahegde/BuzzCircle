@@ -4,22 +4,31 @@ import com.groupify.groupify.model.Circle;
 import com.groupify.groupify.model.User;
 import com.groupify.groupify.repository.CircleRepository;
 import com.groupify.groupify.repository.UserRepository;
+import com.groupify.groupify.service.CircleService;
+
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+import javax.management.RuntimeErrorException;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/circles")
 @RequiredArgsConstructor
 public class CircleController {
-    @Autowired
-    private final CircleRepository circleRepo = null;
-    @Autowired
-    private final UserRepository userRepo = null;
+    private final CircleRepository circleRepo;
+
+    private final UserRepository userRepo;
+
+    private final CircleService circleService;
 
     @GetMapping
     public List<Circle> getAllCircles() {
@@ -41,16 +50,16 @@ public class CircleController {
     }
 
     @PutMapping("/{circleId}/approve")
-@PreAuthorize("hasRole('ADMIN')")
-public ResponseEntity<?> approveCircle(@PathVariable Long circleId) {
-    Circle circle = circleRepo.findById(circleId)
-            .orElseThrow(() -> new RuntimeException("Circle not found"));
-    
-    circle.setApproved(true);
-    circleRepo.save(circle);
-    
-    return ResponseEntity.ok("Circle approved successfully");
-}
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> approveCircle(@PathVariable Long circleId) {
+        Circle circle = circleRepo.findById(circleId)
+                .orElseThrow(() -> new RuntimeException("Circle not found"));
+        
+        circle.setApproved(true);
+        circleRepo.save(circle);
+        
+        return ResponseEntity.ok("Circle approved successfully");
+    }
 
     @PutMapping("/{circleId}")
     public Circle updateCircle(@PathVariable Long circleId, @RequestBody Circle updatedCircle) {
@@ -84,6 +93,35 @@ public ResponseEntity<?> approveCircle(@PathVariable Long circleId) {
                 })
                 .limit(3)
                 .toList();
+    }
+
+    @PostMapping("/{circleId}/join")
+    public ResponseEntity<?> joinCircle(@PathVariable Long circleId){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user = userRepo.findByUsername(username)
+        .orElseThrow(()-> new RuntimeException("User Not found"));
+
+        Circle circle = circleRepo.findById(circleId)
+        .orElseThrow(()-> new RuntimeException("circle not found"));
+
+        circleService.joinCircle(user, circle);
+        return ResponseEntity.ok("Joined circle successfully");
+    }
+
+    @PostMapping("/{circleId}/leave")
+    public ResponseEntity<?> leaveCircle(@PathVariable Long circleId){
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        User user = userRepo.findByUsername(username)
+        .orElseThrow(()-> new RuntimeException("User Not found"));
+
+        Circle circle = circleRepo.findById(circleId)
+        .orElseThrow(()-> new RuntimeException("circle not found"));
+
+        circleService.leaveCircle(user, circle);
+        log.info("Leaving circle");
+        return ResponseEntity.ok("Left the circle");
     }
 }
 

@@ -394,6 +394,13 @@
   color: #000;
 }
 
+.sidebar-empty {
+  color: #999;
+  font-size: 12px;
+  line-height: 1.4;
+  margin: 0 0 12px;
+}
+
 .contact-list,
 .group-list {
   list-style: none;

@@ -4,10 +4,14 @@ import com.groupify.groupify.model.Post;
 import com.groupify.groupify.model.User;
 import com.groupify.groupify.model.PostUpvote;
 import com.groupify.groupify.repository.PostUpvoteRepository;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.groupify.groupify.repository.PostRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 public class PostService {
     @Autowired
@@ -17,6 +21,7 @@ public class PostService {
 
     public boolean upvotePost(Post post, User user) {
         if (postUpvoteRepository.findByPostAndUser(post, user).isPresent()) {
+            log.info("User already upvoted!!");
             return false; // User already upvoted
         }
         PostUpvote upvote = new PostUpvote();
