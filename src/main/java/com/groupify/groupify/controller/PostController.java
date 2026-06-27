@@ -5,9 +5,13 @@ import com.groupify.groupify.repository.PostRepository;
 import com.groupify.groupify.repository.UserRepository;
 import com.groupify.groupify.service.PostService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 
@@ -15,24 +19,29 @@ import java.util.List;
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
 public class PostController  {
-    @Autowired
-    private final PostRepository postRepository = null;
-    @Autowired
-    private final UserRepository userRepository = null;
-    @Autowired
-    private PostService postService;
+    private final PostRepository postRepository;
+    private final UserRepository userRepository;
+    private final PostService postService;
 
     @GetMapping("/{userId}")
-    public List<Post> getPostsByUser (@PathVariable Long userId){
-        return postRepository.findByUserId(userId);
+    public ResponseEntity<Page<Post>> getPostsByUser (@PathVariable Long userId,
+                @RequestParam(defaultValue = "0") int page,
+                @RequestParam(defaultValue = "10") int size,
+                @RequestParam(defaultValue = "id") String sortBy,
+                @RequestParam(defaultValue = "desc") String direction)
+    {
+        Sort sort = direction.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<Post> posts = postRepository.findByUserId(userId, pageable);
+        return ResponseEntity.ok(posts);
     }
 
     @PostMapping
     public Post createPost (@RequestBody Post post){
-        Long userId = post.getUser().getId();
-        User user = userRepository.findById(userId).orElseThrow(
-                () -> new RuntimeException("User not found with userId : "+userId)
-        );
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+        .orElseThrow(() -> new RuntimeException("User not found"));
         post.setUser(user);
         return postRepository.save(post);
     }

@@ -1,6 +1,9 @@
 package com.groupify.groupify.model;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.*;
@@ -52,8 +55,7 @@ public class User {
     @JsonIgnore
     private List<Post> posts;
 
-    @ManyToMany
-    @JsonIgnore
+    @ManyToMany(mappedBy = "members")
     private List<Circle> circles;
 
     // Users this user is following
@@ -63,12 +65,10 @@ public class User {
             joinColumns = @JoinColumn(name = "follower_id"),
             inverseJoinColumns = @JoinColumn(name = "following_id")
     )
-    @JsonIgnore
     private Set<User> following = new HashSet<>();
 
     // Users who follow this user
     @ManyToMany(mappedBy = "following")
-    @JsonIgnore
     private Set<User> followers = new HashSet<>();
 
     public List<String> getInterests() {

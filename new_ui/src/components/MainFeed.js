@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import CircleCard from './CircleCard';
 import NewPostForm from './NewPostForm';
@@ -6,28 +6,37 @@ import PostCard from './PostCard';
 
 const API_URL = 'http://localhost:8080/api';
 
+const normalizeList = (data) => {
+  if (Array.isArray(data)) {
+    return data;
+  }
+
+  if (Array.isArray(data?.content)) {
+    return data.content;
+  }
+
+  return [];
+};
+
+const getAuthHeaders = () => {
+  const token = localStorage.getItem('token');
+  return {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    },
+  };
+};
+
 const MainFeed = () => {
   const [circles, setCircles] = useState([]);
   const [posts, setPosts] = useState([]);
   const [filter, setFilter] = useState('latest');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const visiblePosts = normalizeList(posts);
 
-  const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
-    return {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    };
-  };
-
-  useEffect(() => {
-    fetchCirclesAndPosts();
-  }, []);
-
-  const fetchCirclesAndPosts = async () => {
+  const fetchCirclesAndPosts = useCallback(async () => {
     try {
       setLoading(true);
       const userId = localStorage.getItem('userId');
@@ -37,23 +46,28 @@ const MainFeed = () => {
         `${API_URL}/posts/${userId}`,
         getAuthHeaders()
       );
-      setPosts(postsResponse.data || []);
+      setPosts(normalizeList(postsResponse.data));
       
-      // Fetch circles (mock data for now - add circle endpoint when available)
-      setCircles([
-        { id: 1, name: 'Full Stack Devs', members: 12, image: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
-        { id: 2, name: 'UI/UX Design Hub', members: 8, image: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
-        { id: 3, name: 'Book Lovers', members: 5, image: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
-      ]);
+      // Fetch approved circles from database
+      const circlesResponse = await axios.get(
+        `${API_URL}/circles/approved`,
+        getAuthHeaders()
+      );
+      setCircles(normalizeList(circlesResponse.data));
       
       setError(null);
     } catch (err) {
       setError('Failed to load posts');
-      console.error(err);
+      console.error('Error details:', err);
+      setCircles([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchCirclesAndPosts();
+  }, [fetchCirclesAndPosts]);
 
   const handleNewPost = async (newPost) => {
     try {
@@ -62,7 +76,7 @@ const MainFeed = () => {
         newPost,
         getAuthHeaders()
       );
-      setPosts([response.data, ...posts]);
+      setPosts(currentPosts => [response.data, ...normalizeList(currentPosts)]);
     } catch (err) {
       console.error('Failed to create post:', err);
     }
@@ -77,7 +91,7 @@ const MainFeed = () => {
 
       <div className="circles-section">
         <div className="circles-grid">
-          {circles.map(circle => (
+          {normalizeList(circles).map(circle => (
             <CircleCard key={circle.id} circle={circle} />
           ))}
         </div>
@@ -113,8 +127,8 @@ const MainFeed = () => {
         
         {loading && <p style={{ textAlign: 'center', color: '#999' }}>Loading posts...</p>}
 
-        {!loading && posts.length > 0 ? (
-          posts.map(post => (
+        {!loading && visiblePosts.length > 0 ? (
+          visiblePosts.map(post => (
             <PostCard key={post.id} post={post} />
           ))
         ) : !loading && !error ? (

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import '../styles/Login.css';
 import { Link } from "react-router-dom";
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 const API_URL = 'http://localhost:8080/api';
 
@@ -12,6 +14,7 @@ const Login = ({ onLoginSuccess }) => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useContext(AuthContext);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -34,9 +37,14 @@ const Login = ({ onLoginSuccess }) => {
       );
 
       if (response.data && response.data.token && response.data.userId) {
-        localStorage.setItem('token', response.data.token);
-        localStorage.setItem('userId', response.data.userId);
-        localStorage.setItem('username', response.data.username);
+        // localStorage.setItem('token', response.data.token);
+        // localStorage.setItem('userId', response.data.userId);
+        // localStorage.setItem('username', response.data.username);
+        login({
+          token: response.data.token,
+          userId: response.data.userId,
+          username: response.data.username,
+        });
         
         onLoginSuccess();
         navigate('/');

@@ -6,8 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.groupify.groupify.repository.CircleRepository;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.*;
 
+@Slf4j
 @Service
 public class CircleService {
     @Autowired
@@ -38,6 +41,18 @@ public class CircleService {
                 .map(Map.Entry::getKey)
                 .toList();
 
+    }
+
+    public void joinCircle(User user, Circle circle){
+        if(!circle.getMembers().contains(user)){
+            circle.getMembers().add(user);
+            circleRepository.save(circle);
+        }
+    }
+
+    public void leaveCircle(User user, Circle circle){
+        circle.getMembers().remove(user);
+        circleRepository.save(circle);
     }
 }
 
