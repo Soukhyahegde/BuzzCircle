@@ -1,4 +1,5 @@
 package com.groupify.groupify.controller;
+import com.groupify.groupify.dto.PostSummaryDTO;
 import com.groupify.groupify.model.Post;
 import com.groupify.groupify.model.User;
 import com.groupify.groupify.repository.PostRepository;
@@ -13,8 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.PageRequest;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
@@ -23,27 +22,41 @@ public class PostController  {
     private final UserRepository userRepository;
     private final PostService postService;
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<Page<Post>> getPostsByUser (@PathVariable Long userId,
+    @GetMapping
+    public ResponseEntity<Page<PostSummaryDTO>> getAllPosts(
                 @RequestParam(defaultValue = "0") int page,
                 @RequestParam(defaultValue = "10") int size,
-                @RequestParam(defaultValue = "id") String sortBy,
+                @RequestParam(defaultValue = "createdAt") String sortBy,
                 @RequestParam(defaultValue = "desc") String direction)
     {
         Sort sort = direction.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-        Page<Post> posts = postRepository.findByUserId(userId, pageable);
+        Page<PostSummaryDTO> posts = postRepository.findAll(pageable).map(PostSummaryDTO::from);
+        return ResponseEntity.ok(posts);
+    }
+
+    @GetMapping("/{userId}")
+    public ResponseEntity<Page<PostSummaryDTO>> getPostsByUser (@PathVariable Long userId,
+                @RequestParam(defaultValue = "0") int page,
+                @RequestParam(defaultValue = "10") int size,
+                @RequestParam(defaultValue = "createdAt") String sortBy,
+                @RequestParam(defaultValue = "desc") String direction)
+    {
+        Sort sort = direction.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Page<PostSummaryDTO> posts = postRepository.findByUserId(userId, pageable).map(PostSummaryDTO::from);
         return ResponseEntity.ok(posts);
     }
 
     @PostMapping
-    public Post createPost (@RequestBody Post post){
+    public PostSummaryDTO createPost (@RequestBody Post post){
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         User user = userRepository.findByUsername(username)
         .orElseThrow(() -> new RuntimeException("User not found"));
         post.setUser(user);
-        return postRepository.save(post);
+        return PostSummaryDTO.from(postRepository.save(post));
     }
     @PutMapping("/{postId}")
     public Post updatePost (@PathVariable Long postId, @RequestBody Post updatedPost){

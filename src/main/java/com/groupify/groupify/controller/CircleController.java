@@ -1,5 +1,6 @@
 package com.groupify.groupify.controller;
 
+import com.groupify.groupify.dto.CircleSummaryDTO;
 import com.groupify.groupify.model.Circle;
 import com.groupify.groupify.model.User;
 import com.groupify.groupify.repository.CircleRepository;
@@ -31,8 +32,10 @@ public class CircleController {
     private final CircleService circleService;
 
     @GetMapping
-    public List<Circle> getAllCircles() {
-        return circleRepo.findAll();
+    public List<CircleSummaryDTO> getAllCircles() {
+        return circleRepo.findAll().stream()
+                .map(this::toSummary)
+                .toList();
     }
     @GetMapping("/{circleId}")
     public Circle getCircleById(@PathVariable Long circleId) {
@@ -45,8 +48,10 @@ public class CircleController {
         return ResponseEntity.ok(saved);
     }
     @GetMapping("/approved")
-    public List<Circle> getApprovedCircles() {
-        return circleRepo.findByApproved(true);
+    public List<CircleSummaryDTO> getApprovedCircles() {
+        return circleRepo.findByApproved(true).stream()
+                .map(this::toSummary)
+                .toList();
     }
 
     @PutMapping("/{circleId}/approve")
@@ -122,6 +127,15 @@ public class CircleController {
         circleService.leaveCircle(user, circle);
         log.info("Leaving circle");
         return ResponseEntity.ok("Left the circle");
+    }
+
+    private CircleSummaryDTO toSummary(Circle circle) {
+        return new CircleSummaryDTO(
+                circle.getId(),
+                circle.getName(),
+                circle.getDescription(),
+                circle.getMembers().size()
+        );
     }
 }
 

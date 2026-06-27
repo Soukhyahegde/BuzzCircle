@@ -32,8 +32,8 @@ public class SecurityConfig {
                         
                         // User-only endpoints
                         //.requestMatchers("/api/user/**").hasRole("USER")
-                        .requestMatchers("/api/posts/**").hasRole("USER")
-                        .requestMatchers("/api/circles/**").hasRole("USER")
+                        .requestMatchers("/api/posts", "/api/posts/**").hasRole("USER")
+                        .requestMatchers("/api/circles", "/api/circles/**").hasRole("USER")
                         
                         // All other authenticated requests
                         .anyRequest().authenticated()
