@@ -39,26 +39,35 @@ const MainFeed = () => {
   const fetchCirclesAndPosts = useCallback(async () => {
     try {
       setLoading(true);
-      const userId = localStorage.getItem('userId');
-      
-      // Fetch posts
-      const postsResponse = await axios.get(
-        `${API_URL}/posts/${userId}`,
-        getAuthHeaders()
+
+      const [postsResult, circlesResult] = await Promise.allSettled([
+        axios.get(`${API_URL}/posts`, getAuthHeaders()),
+        axios.get(`${API_URL}/circles`, getAuthHeaders()),
+      ]);
+
+      if (postsResult.status === 'fulfilled') {
+        setPosts(normalizeList(postsResult.value.data));
+      } else {
+        setPosts([]);
+        console.error('Failed to load posts:', postsResult.reason);
+      }
+
+      if (circlesResult.status === 'fulfilled') {
+        setCircles(normalizeList(circlesResult.value.data));
+      } else {
+        setCircles([]);
+        console.error('Failed to load circles:', circlesResult.reason);
+      }
+
+      setError(
+        postsResult.status === 'rejected' && circlesResult.status === 'rejected'
+          ? 'Failed to load feed'
+          : null
       );
-      setPosts(normalizeList(postsResponse.data));
-      
-      // Fetch approved circles from database
-      const circlesResponse = await axios.get(
-        `${API_URL}/circles/approved`,
-        getAuthHeaders()
-      );
-      setCircles(normalizeList(circlesResponse.data));
-      
-      setError(null);
     } catch (err) {
-      setError('Failed to load posts');
+      setError('Failed to load feed');
       console.error('Error details:', err);
+      setPosts([]);
       setCircles([]);
     } finally {
       setLoading(false);
@@ -70,16 +79,7 @@ const MainFeed = () => {
   }, [fetchCirclesAndPosts]);
 
   const handleNewPost = async (newPost) => {
-    try {
-      const response = await axios.post(
-        `${API_URL}/posts`,
-        newPost,
-        getAuthHeaders()
-      );
-      setPosts(currentPosts => [response.data, ...normalizeList(currentPosts)]);
-    } catch (err) {
-      console.error('Failed to create post:', err);
-    }
+    setPosts(currentPosts => [newPost, ...normalizeList(currentPosts)]);
   };
 
   return (

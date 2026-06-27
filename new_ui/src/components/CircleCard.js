@@ -3,6 +3,22 @@ import axios from 'axios';
 
 const API_URL = 'http://localhost:8080/api';
 
+const getMemberCount = (circle) => {
+  if (typeof circle?.memberCount === 'number') {
+    return circle.memberCount;
+  }
+
+  if (Array.isArray(circle?.members)) {
+    return circle.members.length;
+  }
+
+  if (typeof circle?.members === 'number') {
+    return circle.members;
+  }
+
+  return 0;
+};
+
 const CircleCard = ({ circle }) => {
   const [joining, setJoining] = useState(false);
 
@@ -50,7 +66,7 @@ const CircleCard = ({ circle }) => {
       />
       <div className="circle-content">
         <div className="circle-name">{circle.name}</div>
-        <div className="circle-members">{circle.members} members</div>
+        <div className="circle-members">{getMemberCount(circle)} members</div>
         <button className="join-btn" onClick={handleJoinCircle} disabled={joining}>
           {joining ? 'Joining...' : 'Join Circle'}
         </button>
