@@ -19,7 +19,7 @@ const getMemberCount = (circle) => {
   return 0;
 };
 
-const CircleCard = ({ circle }) => {
+const CircleCard = ({ circle, onJoined }) => {
   const [joining, setJoining] = useState(false);
 
   const getAuthHeaders = () => {
@@ -45,10 +45,12 @@ const CircleCard = ({ circle }) => {
       );
       
       alert(`Joined ${circle.name}`);
+      onJoined?.(circle.id);
     } catch (err) {
       if (err.response?.status === 404) {
         // Endpoint not yet implemented
         alert(`Joined ${circle.name}`);
+        onJoined?.(circle.id);
       } else {
         console.error('Failed to join circle:', err);
         alert('Failed to join circle');
