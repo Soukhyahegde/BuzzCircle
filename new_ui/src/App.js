@@ -6,6 +6,7 @@ import { AuthProvider, AuthContext } from './context/AuthContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
+import Explore from './pages/Explore';
 
 // Setup axios interceptor for JWT token
 axios.interceptors.request.use((config) => {
@@ -69,10 +70,8 @@ function AppContent() {
             <Route 
               path="/" 
               element={user ? <Dashboard /> : <Navigate to="/login" />}
-    //           element={ localStorage.getItem('token')
-    // ? <Dashboard />
-    // : <Navigate to="/login" />} 
             />
+            <Route path="/explore" element={user ? <Explore /> : <Navigate to="/login" />} />
             <Route path="*" element={<Navigate to={user ? "/" : "/login"} />} />
           </Routes>
         </main>

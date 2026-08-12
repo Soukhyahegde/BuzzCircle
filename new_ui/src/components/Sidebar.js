@@ -11,8 +11,8 @@ const Sidebar = () => {
     navigate('/login');
   };
   const navItems = [
-    { icon: '👤', label: 'Profile', active: false },
-    { icon: '🔍', label: 'Explore', active: false },
+    { icon: '👤', label: 'Profile', active: false, onClick: () => navigate('/') },
+    { icon: '🔍', label: 'Explore', active: false, onClick: () => navigate('/explore') },
     { icon: '💬', label: 'Messages', active: false },
     { icon: '🔔', label: 'Notifications', active: false },
     { icon: '📚', label: 'Bookmarks', active: false },
@@ -27,7 +27,12 @@ const Sidebar = () => {
       </div>
       <ul className="sidebar-nav">
         {navItems.map((item, index) => (
-          <li key={index} className={item.active ? 'active' : ''}>
+          <li
+            key={index}
+            className={item.active ? 'active' : ''}
+            onClick={item.onClick}
+            style={{ cursor: item.onClick ? 'pointer' : 'default' }}
+          >
             <span className="nav-icon">{item.icon}</span>
             <span>{item.label}</span>
           </li>

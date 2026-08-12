@@ -30,7 +30,7 @@ const getAuthHeaders = () => {
 
 const getCircleKey = (circleId) => String(circleId);
 
-const MainFeed = () => {
+const MainFeed = ({ maxCircles = 4 }) => {
   const [circles, setCircles] = useState([]);
   const [posts, setPosts] = useState([]);
   const [filter, setFilter] = useState('latest');
@@ -42,6 +42,8 @@ const MainFeed = () => {
   const [circleTags, setCircleTags] = useState('');
   const [creatingCircle, setCreatingCircle] = useState(false);
   const visiblePosts = normalizeList(posts);
+  const allCircles = normalizeList(circles);
+  const visibleCircles = maxCircles ? allCircles.slice(0, maxCircles) : allCircles;
 
   const fetchCirclesAndPosts = useCallback(async () => {
     try {
@@ -50,7 +52,7 @@ const MainFeed = () => {
 
       const [postsResult, circlesResult, userCirclesResult] = await Promise.allSettled([
         axios.get(`${API_URL}/posts`, getAuthHeaders()),
-        axios.get(`${API_URL}/circles`, getAuthHeaders()),
+        axios.get(`${API_URL}/circles/approved`, getAuthHeaders()),
         userId
           ? axios.get(`${API_URL}/user/${userId}/circles`, getAuthHeaders())
           : Promise.resolve({ data: [] }),
@@ -71,9 +73,9 @@ const MainFeed = () => {
         );
 
         setCircles(
-          normalizeList(circlesResult.value.data).filter(
-            circle => !joinedCircleIds.has(getCircleKey(circle.id))
-          )
+          normalizeList(circlesResult.value.data)
+            .filter(circle => circle?.approved !== false)
+            .filter(circle => !joinedCircleIds.has(getCircleKey(circle.id)))
         );
       } else {
         setCircles([]);
@@ -241,7 +243,7 @@ const MainFeed = () => {
 
       <div className="circles-section">
         <div className="circles-grid">
-          {normalizeList(circles).map(circle => (
+          {visibleCircles.map(circle => (
             <CircleCard
               key={circle.id}
               circle={circle}
