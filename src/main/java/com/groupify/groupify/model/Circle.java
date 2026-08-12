@@ -1,12 +1,26 @@
 package com.groupify.groupify.model;
 
-import jakarta.persistence.*;
-import lombok.*;
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
+import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Getter
@@ -45,6 +59,7 @@ public class Circle {
 
     @ManyToMany
     @JoinTable(name = "circle_members", joinColumns = @JoinColumn(name = "circle_id"), inverseJoinColumns = @JoinColumn(name = "user_id"))
+    @JsonIgnore
     private Set<User> members = new HashSet<>();
 
     public Set<User> getMembers(){

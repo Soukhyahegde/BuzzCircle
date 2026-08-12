@@ -1,16 +1,22 @@
 package com.groupify.groupify.controller;
 
 
-import com.groupify.groupify.model.Circle;
-import com.groupify.groupify.repository.CircleRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.groupify.groupify.model.Circle;
+import com.groupify.groupify.repository.CircleRepository;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/admin/circles")
@@ -21,7 +27,9 @@ public class AdminController {
 
     @GetMapping("/pending")
     public ResponseEntity<List<Circle>> getPendingCircles() {
-        return ResponseEntity.ok(circleRepository.findByApproved(false));
+        List<Circle> pending = circleRepository.findByApproved(false);
+        pending.forEach(circle -> circle.setMembers(new java.util.HashSet<>()));
+        return ResponseEntity.ok(pending);
     }
 
     @PutMapping("/{id}/approve")

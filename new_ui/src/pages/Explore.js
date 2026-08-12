@@ -3,14 +3,14 @@ import Sidebar from '../components/Sidebar';
 import MainFeed from '../components/MainFeed';
 import RightSidebar from '../components/RightSidebar';
 
-function Dashboard() {
+function Explore() {
   return (
     <div className="app-container">
       <Sidebar />
-      <MainFeed maxCircles={4} />
+      <MainFeed maxCircles={null} />
       <RightSidebar />
     </div>
   );
 }
 
-export default Dashboard;
+export default Explore;
