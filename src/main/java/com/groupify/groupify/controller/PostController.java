@@ -1,9 +1,12 @@
 package com.groupify.groupify.controller;
 import com.groupify.groupify.dto.PostSummaryDTO;
+import com.groupify.groupify.dto.CommentDTO;
 import com.groupify.groupify.model.Post;
 import com.groupify.groupify.model.User;
+import com.groupify.groupify.model.Comment;
 import com.groupify.groupify.repository.PostRepository;
 import com.groupify.groupify.repository.UserRepository;
+import com.groupify.groupify.repository.CommentRepository;
 import com.groupify.groupify.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.PageRequest;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/posts")
@@ -21,6 +25,7 @@ public class PostController  {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final PostService postService;
+    private final CommentRepository commentRepository;
 
     @GetMapping
     public ResponseEntity<Page<PostSummaryDTO>> getAllPosts(
@@ -85,5 +90,23 @@ public class PostController  {
         } else {
             return ResponseEntity.badRequest().body("User has already upvoted this post");
         }
+    }
+
+    @PostMapping("/{postId}/comments")
+    public ResponseEntity<?> addComment(@PathVariable Long postId, @RequestBody Map<String, String> payload) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new RuntimeException("Cannot find post: " + postId));
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Comment comment = new Comment();
+        comment.setContent(payload.get("content"));
+        comment.setUser(user);
+        comment.setPost(post);
+
+        commentRepository.save(comment);
+
+        return ResponseEntity.ok(CommentDTO.from(comment));
     }
 }

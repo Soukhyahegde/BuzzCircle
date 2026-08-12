@@ -3,6 +3,7 @@ package com.groupify.groupify.controller;
 
 import com.groupify.groupify.model.Circle;
 import com.groupify.groupify.repository.CircleRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,9 +14,10 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/admin/circles")
+@RequiredArgsConstructor
 public class AdminController {
 
-    private CircleRepository circleRepository;
+    private final CircleRepository circleRepository;
 
     @GetMapping("/pending")
     public ResponseEntity<List<Circle>> getPendingCircles() {

