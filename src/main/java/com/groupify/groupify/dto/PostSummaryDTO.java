@@ -16,7 +16,7 @@ public class PostSummaryDTO {
     private String content;
     private String title;
     private int upvotes;
-    private String comments;
+    private List<CommentDTO> comments;
     private List<String> images;
     private LocalDateTime createdAt;
     private UserDTO user;
@@ -29,12 +29,16 @@ public class PostSummaryDTO {
                 0
         );
 
+        List<CommentDTO> commentDTOs = post.getComments() != null ?
+                post.getComments().stream().map(CommentDTO::from).toList() :
+                Collections.emptyList();
+
         return new PostSummaryDTO(
                 post.getId(),
                 post.getContent(),
                 post.getTitle(),
                 post.getUpvotes(),
-                post.getComments(),
+                commentDTOs,
                 Collections.emptyList(),
                 post.getCreatedAt(),
                 user

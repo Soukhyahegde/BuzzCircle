@@ -2,6 +2,8 @@ package com.groupify.groupify.model;
 
 import java.sql.Blob;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,7 +21,9 @@ public class Post {
     private String content;
     private String title;
     private int upvotes;
-    private String comments;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
 
     @Column(columnDefinition = "LONGTEXT")
     private String images;

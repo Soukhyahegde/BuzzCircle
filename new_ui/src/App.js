@@ -56,7 +56,7 @@ function AppContent() {
           </div>
         </header>
 
-        <main style={{ padding: '1.5rem' }}>
+        <main style={{ padding: user ? '0' : '1.5rem' }}>
           <Routes>
             <Route 
               path="/login" 
