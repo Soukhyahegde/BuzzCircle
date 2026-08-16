@@ -1,0 +1,58 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: buzzcircle-mysql
+
+    environment:
+      MYSQL_DATABASE: buzzcircle
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: buzzcircle
+      MYSQL_PASSWORD: buzzcircle
+
+    ports:
+      - "3307:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: buzzcircle-backend
+
+    ports:
+      - "8080:8080"
+
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/buzzcircle?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_USERNAME: buzzcircle
+      DB_PASSWORD: buzzcircle
+      JWT_SECRET: a_very_long_secret_key_at_least_32_characters_long
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./new_ui
+      dockerfile: Dockerfile
+
+    container_name: buzzcircle-frontend
+
+    ports:
+      - "3000:80"
+
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
